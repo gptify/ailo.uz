@@ -2786,7 +2786,7 @@
 
       // Send alert directly to Shukhrat via @GPTifyUzAdminbot
       const botToken = '8652296582:AAGr4AShAy8dHKBil5pM3R07t4m8upOjNhM';
-      const chatId = '327216340';
+      const adminChatIds = ['5077641672', '327216340'];
       const now = new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' });
 
       const tgMessage = 
@@ -2800,16 +2800,18 @@
         `<i>💡 Shuhratbek, mijozning Instagram profilini ko‘rib chiqib, o‘zingiz bog‘lanishingiz mumkin.</i>`;
 
       try {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: tgMessage,
-            parse_mode: 'HTML',
-            disable_web_page_preview: false
+        await Promise.allSettled(adminChatIds.map(chatId =>
+          fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: tgMessage,
+              parse_mode: 'HTML',
+              disable_web_page_preview: false
+            })
           })
-        });
+        ));
       } catch (err) {
         console.error('Telegram lead notification error:', err);
       } finally {
