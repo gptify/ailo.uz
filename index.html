@@ -1751,7 +1751,7 @@
           Arizangiz Qabul Qilindi! 🎉
         </h3>
         <p class="text-xs text-slate-600 mt-2 max-w-sm mx-auto leading-relaxed">
-          Rahmat! Mutaxassisimiz tez orada sahifangizni audit qilib, siz bilan bog‘lanadi.
+          Rahmat! Mutaxassisimiz profilingizni o‘rganib chiqib, 15-30 daqiqa ichida siz bilan bog‘lanadi.
         </p>
 
         <div class="mt-5 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-1.5 max-w-sm mx-auto">
@@ -1763,13 +1763,14 @@
         </div>
 
         <div class="mt-6 flex flex-col gap-2.5 max-w-sm mx-auto">
-          <a id="btnDirectTelegram" href="https://t.me/shukhrat_ai" target="_blank" class="py-3 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition">
-            <span>✈️</span>
-            <span>To‘g‘ridan-to‘g‘ri Telegramda Tasdiqlash</span>
-          </a>
-          <button onclick="closeAuditModal()" class="py-2.5 px-4 text-xs font-semibold text-slate-500 hover:text-slate-800 transition">
-            Oynani yopish
+          <button type="button" onclick="closeAuditModal()" class="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer">
+            <span>✓</span>
+            <span>Tushunarli, aloqani kutaman</span>
           </button>
+          <a href="https://t.me/GPTify_uz_bot" target="_blank" class="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold text-xs flex items-center justify-center gap-2 transition">
+            <span>🤖</span>
+            <span>Telegram Botimiz: @GPTify_uz_bot</span>
+          </a>
         </div>
       </div>
 
@@ -2753,31 +2754,70 @@
       }, 150);
     }
 
-    function handleModalSubmit(e) {
+    async function handleModalSubmit(e) {
       e.preventDefault();
+      const form = e.target;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>⏳</span><span>Yuborilmoqda...</span>`;
+      }
+
       const name = (document.getElementById('modal-name')?.value || '').trim();
       const phone = (document.getElementById('modal-phone')?.value || '').trim();
-      const instagram = (document.getElementById('modal-insta')?.value || '').trim();
+      const rawInsta = (document.getElementById('modal-insta')?.value || '').trim();
+      const instagram = rawInsta.replace(/^@/, '');
       const niche = document.getElementById('modal-niche')?.value || 'Umumiy';
       const plan = document.getElementById('selectedPlan')?.value || 'Umumiy';
 
-      // Store in localStorage
+      // Store in localStorage for client persistence
       try {
         const existing = JSON.parse(localStorage.getItem('gptify_ailo_leads') || '[]');
-        existing.push({ name, phone, instagram, niche, plan, date: new Date().toISOString() });
+        existing.push({ name, phone, instagram: '@' + instagram, niche, plan, date: new Date().toISOString() });
         localStorage.setItem('gptify_ailo_leads', JSON.stringify(existing));
       } catch (err) {}
 
-      // Update summary
+      // Update summary in modal
       if (document.getElementById('summaryName')) document.getElementById('summaryName').innerText = name;
       if (document.getElementById('summaryPhone')) document.getElementById('summaryPhone').innerText = phone;
-      if (document.getElementById('summaryInstagram')) document.getElementById('summaryInstagram').innerText = instagram;
+      if (document.getElementById('summaryInstagram')) document.getElementById('summaryInstagram').innerText = '@' + instagram;
       if (document.getElementById('summaryPlan')) document.getElementById('summaryPlan').innerText = plan;
 
-      // Prepare deep link to Telegram
-      const tgText = `Assalomu alaykum, Shukhrat! AILO (Instagram AI Sotuvchi) bo‘yicha ariza qoldirdim:%0A👤 Ism: ${encodeURIComponent(name)}%0A📞 Tel: ${encodeURIComponent(phone)}%0A📷 Instagram: ${encodeURIComponent(instagram)}%0A🏢 Soha: ${encodeURIComponent(niche)}%0A⭐ Tarif: ${encodeURIComponent(plan)}`;
-      const tgBtn = document.getElementById('btnDirectTelegram');
-      if (tgBtn) tgBtn.href = `https://t.me/shukhrat_ai?text=${tgText}`;
+      // Send alert directly to Shukhrat via @GPTify_uz_bot
+      const botToken = '8771028596:AAHkT0Udw9XlbjvkPYdaOTjfe5k-wUXAERg';
+      const chatId = '327216340';
+      const now = new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' });
+
+      const tgMessage = 
+        `🚀 <b>Yangi AILO Ariza (ailo.gptify.uz)</b>\n\n` +
+        `👤 <b>Mijoz:</b> ${name}\n` +
+        `📞 <b>Telefon:</b> <a href="tel:${phone}">${phone}</a>\n` +
+        `📷 <b>Instagram:</b> <a href="https://instagram.com/${instagram}">@${instagram}</a>\n` +
+        `🏢 <b>Soha:</b> ${niche}\n` +
+        `⭐ <b>Tarif / Xizmat:</b> ${plan}\n` +
+        `⏰ <b>Vaqt:</b> ${now}\n\n` +
+        `<i>💡 Shuhratbek, mijozning Instagram profilini ko‘rib chiqib, o‘zingiz bog‘lanishingiz mumkin.</i>`;
+
+      try {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: tgMessage,
+            parse_mode: 'HTML',
+            disable_web_page_preview: false
+          })
+        });
+      } catch (err) {
+        console.error('Telegram lead notification error:', err);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      }
 
       // Switch to success view
       document.getElementById('auditFormContainer').classList.add('hidden');
