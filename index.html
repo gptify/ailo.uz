@@ -2774,36 +2774,21 @@
       if (document.getElementById('summaryInstagram')) document.getElementById('summaryInstagram').innerText = '@' + instagram;
       if (document.getElementById('summaryPlan')) document.getElementById('summaryPlan').innerText = plan;
 
-      // Send alert directly to Shukhrat's attached account via @GPTifyUzAdminbot
-      const botToken = '8652296582:AAGr4AShAy8dHKBil5pM3R07t4m8upOjNhM';
-      const adminChatIds = ['327216340'];
-      const now = new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' });
-
-      const tgMessage = 
-        `🚀 <b>Yangi AILO Ariza (ailo.gptify.uz)</b>\n\n` +
-        `👤 <b>Mijoz:</b> ${name}\n` +
-        `📞 <b>Telefon:</b> <a href="tel:${phone}">${phone}</a>\n` +
-        `📷 <b>Instagram:</b> <a href="https://instagram.com/${instagram}">@${instagram}</a>\n` +
-        `🏢 <b>Soha:</b> ${niche}\n` +
-        `⭐ <b>Tarif / Xizmat:</b> ${plan}\n` +
-        `⏰ <b>Vaqt:</b> ${now}\n\n` +
-        `<i>💡 Shuhratbek, mijozning Instagram profilini ko‘rib chiqib, o‘zingiz bog‘lanishingiz mumkin.</i>`;
-
+      // Send alert securely via backend API (No exposed tokens in frontend!)
       try {
-        await Promise.allSettled(adminChatIds.map(chatId =>
-          fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: tgMessage,
-              parse_mode: 'HTML',
-              disable_web_page_preview: false
-            })
+        await fetch('/api/send-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            phone,
+            instagram: '@' + instagram,
+            niche,
+            plan
           })
-        ));
+        });
       } catch (err) {
-        console.error('Telegram lead notification error:', err);
+        console.error('Lead notification error:', err);
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
